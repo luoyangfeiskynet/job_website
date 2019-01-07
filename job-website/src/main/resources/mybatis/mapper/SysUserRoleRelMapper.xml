@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.fqy.core.dao.SysUserRoleRelDao">
+
+<resultMap type="SysUserRoleRel" id="SysUserRoleRel">
+	<id column="USER_ID" property="userId" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<id column="ROLE_ID" property="roleId" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="CREATE_TIME" property="createTime" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+	<result column="UPDATE_TIME" property="updateTime" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+	<result column="OPERATOR_TYPE" property="operatorType" javaType="java.lang.Integer" jdbcType="TINYINT"/>
+	<result column="OPERATOR_ID" property="operatorId" javaType="java.lang.String" jdbcType="VARCHAR"/>
+</resultMap>
+<resultMap type="SysRole" id="SysRole">
+    <id column="ROLE_ID" property="roleId" javaType="java.lang.String" jdbcType="VARCHAR"/>
+    <result column="ROLE_NAME" property="roleName" javaType="java.lang.String" jdbcType="VARCHAR"/>
+    <result column="MEMO" property="memo" javaType="java.lang.String" jdbcType="VARCHAR"/>
+    <result column="IS_AVAILABLE" property="isAvailable" javaType="java.lang.Integer" jdbcType="TINYINT"/>
+    <result column="IS_DELETED" property="isDeleted" javaType="java.lang.Integer" jdbcType="TINYINT"/>
+    <result column="CREATE_TIME" property="createTime" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+    <result column="UPDATE_TIME" property="updateTime" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+    <result column="OPERATOR_TYPE" property="operatorType" javaType="java.lang.Integer" jdbcType="TINYINT"/>
+    <result column="OPERATOR_ID" property="operatorId" javaType="java.lang.String" jdbcType="VARCHAR"/>
+</resultMap>
+
+<!-- 全部字段，一般用于明细查询 -->
+<sql id="AllColumnlist">
+USER_ID,ROLE_ID,CREATE_TIME,UPDATE_TIME,OPERATOR_TYPE,OPERATOR_ID
+</sql>
+
+<!-- 常见字段，一般用于列表查询，可能不包含备注之类的字段 -->
+<sql id="CommonColumnlist">
+USER_ID,ROLE_ID,CREATE_TIME,UPDATE_TIME,OPERATOR_TYPE,OPERATOR_ID
+</sql>
+
+<insert id="add" parameterType="SysUserRoleRel" useGeneratedKeys="true" keyProperty="roleId">
+	insert into T_SYS_USER_ROLE_REL(
+		<if test="userId!=null">
+		USER_ID,
+		</if>
+		<if test="roleId!=null">
+		ROLE_ID,
+		</if>
+		CREATE_TIME,
+		UPDATE_TIME,
+		OPERATOR_TYPE,
+		OPERATOR_ID
+	) values (
+		<if test="userId!=null">
+		#{userId,jdbcType = VARCHAR},
+		</if>
+		<if test="roleId!=null">
+		#{roleId,jdbcType = VARCHAR},
+		</if>
+		#{createTime,jdbcType = TIMESTAMP},
+		#{updateTime,jdbcType = TIMESTAMP},
+		#{operatorType,jdbcType = TINYINT},
+		#{operatorId,jdbcType = VARCHAR}
+	)
+</insert>
+
+<update id="update" parameterType="SysUserRoleRel">
+	update T_SYS_USER_ROLE_REL 
+	<set>
+		<if test="createTime!=null ">
+			CREATE_TIME=#{createTime,jdbcType = TIMESTAMP},
+		</if>
+		<if test="updateTime!=null ">
+			UPDATE_TIME=#{updateTime,jdbcType = TIMESTAMP},
+		</if>
+		<if test="operatorType!=null ">
+			OPERATOR_TYPE=#{operatorType,jdbcType = TINYINT},
+		</if>
+		<if test="operatorId!=null and operatorId!=''">
+			OPERATOR_ID=#{operatorId,jdbcType = VARCHAR},
+		</if>
+	</set>
+	<where>
+		AND ROLE_ID=#{roleId}
+		AND USER_ID=#{userId}
+	</where>
+</update>
+
+<delete id="delete">
+	delete from T_SYS_USER_ROLE_REL 
+	<where>
+		ROLE_ID=#{0}
+		USER_ID=#{1}
+	</where>
+</delete>
+<delete id="deleteByUserId">
+    delete from T_SYS_USER_ROLE_REL 
+    <where>
+        USER_ID=#{0}
+    </where>
+</delete>
+<delete id="deleteByRoleId">
+    delete from T_SYS_USER_ROLE_REL 
+    <where>
+        ROLE_ID=#{0}
+    </where>
+</delete>
+<select id="get" resultMap="SysUserRoleRel">
+	select <include refid="AllColumnlist"/> from T_SYS_USER_ROLE_REL
+	<where>
+		ROLE_ID=#{0}
+		USER_ID=#{1}
+	</where>
+</select>
+<select id="getByUserId" resultMap="SysUserRoleRel">
+    select sur.* from T_SYS_USER_ROLE_REL sur
+    left join t_sys_role sr on sr.ROLE_ID = sur.ROLE_ID
+    <where>
+        USER_ID=#{0}
+        and sr.IS_AVAILABLE = 1
+    </where>
+</select>
+<!-- 查询对应用户下所有角色 -->
+<select id="getAllUserRole"  resultMap="SysRole">
+    <![CDATA[
+        SELECT p.*
+        FROM T_SYS_USER_ROLE_REL r, T_SYS_ROLE p  WHERE r.user_id = #{0} and 
+            p.role_id = r.role_id
+    ]]>
+</select>
+<select id="getByIds" resultMap="SysUserRoleRel">
+	select <include refid="AllColumnlist"/> from T_SYS_USER_ROLE_REL
+	<where>
+		USER_ID in <foreach item="item" index="index" collection="array" open="(" separator="," close=")">#{item}</foreach>
+	</where>
+</select>
+
+<select id="count" parameterType="Query" resultType="Long">
+	select count(USER_ID) from T_SYS_USER_ROLE_REL 
+	<where>
+	<include refid="listCommonWhere"/>
+	</where>
+</select>
+
+<select id="queryAll" parameterType="Query" resultMap="SysUserRoleRel">
+	select <include refid="CommonColumnlist"/> from T_SYS_USER_ROLE_REL 
+	<where>
+	<include refid="listCommonWhere"/>
+	</where>
+</select>
+
+<select id="pageList" parameterType="Query" resultMap="SysUserRoleRel">
+	select <include refid="CommonColumnlist"/> from T_SYS_USER_ROLE_REL
+	<where>
+	 <include refid="listCommonWhere"/>
+	</where>
+	<![CDATA[LIMIT #{rowIndex},#{pageSize} ]]>
+</select>
+
+
+<sql id="listCommonWhere">
+	<if test="q!=null">
+		<if test="q.userId!=null and q.userId!=''">
+			AND USER_ID=#{q.userId}
+		</if>
+		<if test="q.roleId!=null and q.roleId!=''">
+			AND ROLE_ID=#{q.roleId}
+		</if>
+		<if test="q.createTime!=null ">
+			AND CREATE_TIME=#{q.createTime}
+		</if>
+		<if test="q.createTimeStart!=null">
+		<![CDATA[	AND CREATE_TIME>=#{q.createTimeStart}  ]]>
+		</if>
+		<if test="q.createTimeEnd!=null">
+		<![CDATA[	AND CREATE_TIME<#{q.createTimeEnd}   ]]>
+		</if>
+		<if test="q.updateTime!=null ">
+			AND UPDATE_TIME=#{q.updateTime}
+		</if>
+		<if test="q.updateTimeStart!=null">
+		<![CDATA[	AND UPDATE_TIME>=#{q.updateTimeStart}  ]]>
+		</if>
+		<if test="q.updateTimeEnd!=null">
+		<![CDATA[	AND UPDATE_TIME<#{q.updateTimeEnd}   ]]>
+		</if>
+		<if test="q.operatorType!=null ">
+			AND OPERATOR_TYPE=#{q.operatorType}
+		</if>
+		<if test="q.operatorId!=null and q.operatorId!=''">
+			AND OPERATOR_ID=#{q.operatorId}
+		</if>
+	</if>
+</sql>
+
+</mapper>

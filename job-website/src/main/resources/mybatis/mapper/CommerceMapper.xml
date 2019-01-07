@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.fqy.core.dao.CommerceDao">
+
+<resultMap type="Commerce" id="Commerce">
+	<id column="COMMERCE_ID" property="commerceId" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="COMMERCE_PIC" property="commercePic" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="COMMERCE_EMAIL" property="commerceEmail" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="COMMERCE_MOBILE" property="commerceMobile" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="COMMERCE_QR_CODE_PIC" property="commerceQrCodePic" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="IS_AVAILABLE" property="isAvailable" javaType="java.lang.Integer" jdbcType="TINYINT"/>
+	<result column="IS_DELETED" property="isDeleted" javaType="java.lang.Integer" jdbcType="TINYINT"/>
+	<result column="CREATE_TIME" property="createTime" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+	<result column="UPDATE_TIME" property="updateTime" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+	<result column="OPERATOR_ID" property="operatorId" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="OPERATOR_TYPE" property="operatorType" javaType="java.lang.Integer" jdbcType="TINYINT"/>
+</resultMap>
+
+
+<!-- 全部字段，一般用于明细查询 -->
+<sql id="AllColumnlist">
+COMMERCE_ID,COMMERCE_PIC,COMMERCE_EMAIL,COMMERCE_MOBILE,COMMERCE_QR_CODE_PIC,IS_AVAILABLE,IS_DELETED,
+CREATE_TIME,UPDATE_TIME,OPERATOR_ID,OPERATOR_TYPE
+</sql>
+
+<!-- 常见字段，一般用于列表查询，可能不包含备注之类的字段 -->
+<sql id="CommonColumnlist">
+COMMERCE_ID,COMMERCE_PIC,COMMERCE_EMAIL,COMMERCE_MOBILE,COMMERCE_QR_CODE_PIC,IS_AVAILABLE,IS_DELETED,
+CREATE_TIME,UPDATE_TIME,OPERATOR_ID,OPERATOR_TYPE
+</sql>
+
+<insert id="add" parameterType="Commerce" useGeneratedKeys="true" keyProperty="commerceId">
+	insert into T_COMMERCE(
+		<if test="commerceId!=null">
+		COMMERCE_ID,
+		</if>
+		COMMERCE_PIC,
+		COMMERCE_EMAIL,
+		COMMERCE_MOBILE,
+		COMMERCE_QR_CODE_PIC,
+		IS_AVAILABLE,
+		IS_DELETED,
+		CREATE_TIME,
+		UPDATE_TIME,
+		OPERATOR_ID,
+		OPERATOR_TYPE
+	) values (
+		<if test="commerceId!=null">
+		#{commerceId,jdbcType = VARCHAR},
+		</if>
+		#{commercePic,jdbcType = VARCHAR},
+		#{commerceEmail,jdbcType = VARCHAR},
+		#{commerceMobile,jdbcType = VARCHAR},
+		#{commerceQrCodePic,jdbcType = VARCHAR},
+		#{isAvailable,jdbcType = TINYINT},
+		#{isDeleted,jdbcType = TINYINT},
+		#{createTime,jdbcType = TIMESTAMP},
+		#{updateTime,jdbcType = TIMESTAMP},
+		#{operatorId,jdbcType = VARCHAR},
+		#{operatorType,jdbcType = TINYINT}
+	)
+</insert>
+
+<update id="update" parameterType="Commerce">
+	update T_COMMERCE 
+	<set>
+		<if test="commercePic!=null and commercePic!=''">
+			COMMERCE_PIC=#{commercePic,jdbcType = VARCHAR},
+		</if>
+		<if test="commerceEmail!=null and commerceEmail!=''">
+			COMMERCE_EMAIL=#{commerceEmail,jdbcType = VARCHAR},
+		</if>
+		<if test="commerceMobile!=null and commerceMobile!=''">
+			COMMERCE_MOBILE=#{commerceMobile,jdbcType = VARCHAR},
+		</if>
+		<if test="commerceQrCodePic!=null and commerceQrCodePic!=''">
+			COMMERCE_QR_CODE_PIC=#{commerceQrCodePic,jdbcType = VARCHAR},
+		</if>
+		<if test="isAvailable!=null ">
+			IS_AVAILABLE=#{isAvailable,jdbcType = TINYINT},
+		</if>
+		<if test="isDeleted!=null ">
+			IS_DELETED=#{isDeleted,jdbcType = TINYINT},
+		</if>
+		<if test="createTime!=null ">
+			CREATE_TIME=#{createTime,jdbcType = TIMESTAMP},
+		</if>
+		<if test="updateTime!=null ">
+			UPDATE_TIME=#{updateTime,jdbcType = TIMESTAMP},
+		</if>
+		<if test="operatorId!=null and operatorId!=''">
+			OPERATOR_ID=#{operatorId,jdbcType = VARCHAR},
+		</if>
+		<if test="operatorType!=null ">
+			OPERATOR_TYPE=#{operatorType,jdbcType = TINYINT},
+		</if>
+	</set>
+	<where>
+		AND COMMERCE_ID=#{commerceId}
+	</where>
+</update>
+
+<delete id="delete">
+	delete from T_COMMERCE 
+	<where>
+		COMMERCE_ID=#{0}
+	</where>
+</delete>
+
+<select id="get" resultMap="Commerce">
+	select <include refid="AllColumnlist"/> from T_COMMERCE
+	<where>
+		COMMERCE_ID=#{0}
+	</where>
+</select>
+
+<select id="getByIds" resultMap="Commerce">
+	select <include refid="AllColumnlist"/> from T_COMMERCE
+	<where>
+		COMMERCE_ID in <foreach item="item" index="index" collection="array" open="(" separator="," close=")">#{item}</foreach>
+	</where>
+</select>
+
+<select id="count" parameterType="Query" resultType="Long">
+	select count(COMMERCE_ID) from T_COMMERCE 
+	<where>
+	<include refid="listCommonWhere"/>
+	</where>
+</select>
+
+<select id="queryAll" parameterType="Query" resultMap="Commerce">
+	select <include refid="CommonColumnlist"/> from T_COMMERCE 
+	<where>
+	<include refid="listCommonWhere"/>
+	</where>
+</select>
+
+<select id="pageList" parameterType="Query" resultMap="Commerce">
+	select <include refid="CommonColumnlist"/> from T_COMMERCE
+	<where>
+	 <include refid="listCommonWhere"/>
+	</where>
+	<![CDATA[LIMIT #{rowIndex},#{pageSize} ]]>
+</select>
+
+
+<sql id="listCommonWhere">
+    <if test="q==null"><!-- 无传入参数时默认查未删除的 -->
+       AND IS_DELETED=0
+    </if>
+	<if test="q!=null">
+		<if test="q.commerceId!=null and q.commerceId!=''">
+			AND COMMERCE_ID=#{q.commerceId}
+		</if>
+		<if test="q.commercePic!=null and q.commercePic!=''">
+			AND COMMERCE_PIC=#{q.commercePic}
+		</if>
+		<if test="q.commerceEmail!=null and q.commerceEmail!=''">
+			AND COMMERCE_EMAIL=#{q.commerceEmail}
+		</if>
+		<if test="q.commerceMobile!=null and q.commerceMobile!=''">
+			AND COMMERCE_MOBILE=#{q.commerceMobile}
+		</if>
+		<if test="q.commerceQrCodePic!=null and q.commerceQrCodePic!=''">
+			AND COMMERCE_QR_CODE_PIC=#{q.commerceQrCodePic}
+		</if>
+		<if test="q.isAvailable!=null ">
+			AND IS_AVAILABLE=#{q.isAvailable}
+		</if>
+		<if test="q.isDeleted!=null ">
+			AND IS_DELETED=#{q.isDeleted}
+		</if>
+		<if test="q.createTime!=null ">
+			AND CREATE_TIME=#{q.createTime}
+		</if>
+		<if test="q.createTimeStart!=null">
+		<![CDATA[	AND CREATE_TIME>=#{q.createTimeStart}  ]]>
+		</if>
+		<if test="q.createTimeEnd!=null">
+		<![CDATA[	AND CREATE_TIME<#{q.createTimeEnd}   ]]>
+		</if>
+		<if test="q.updateTime!=null ">
+			AND UPDATE_TIME=#{q.updateTime}
+		</if>
+		<if test="q.updateTimeStart!=null">
+		<![CDATA[	AND UPDATE_TIME>=#{q.updateTimeStart}  ]]>
+		</if>
+		<if test="q.updateTimeEnd!=null">
+		<![CDATA[	AND UPDATE_TIME<#{q.updateTimeEnd}   ]]>
+		</if>
+		<if test="q.operatorId!=null and q.operatorId!=''">
+			AND OPERATOR_ID=#{q.operatorId}
+		</if>
+		<if test="q.operatorType!=null ">
+			AND OPERATOR_TYPE=#{q.operatorType}
+		</if>
+	</if>
+</sql>
+
+</mapper>
