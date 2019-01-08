@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.stone.core.dao.JobInfoDao">
+
+<resultMap type="JobInfo" id="JobInfo">
+	<id column="ID" property="id" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="NAME" property="name" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="ID_CARD" property="idCard" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="JOB_NO" property="jobNo" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="JOB_NAME" property="jobName" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="JOB_LEVEL" property="jobLevel" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="PUB_TIME" property="pubTime" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	<result column="IS_DELETED" property="isDeleted" javaType="java.lang.Integer" jdbcType="TINYINT"/>
+	<result column="CREATE_TIME" property="createTime" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+	<result column="UPDATE_TIME" property="updateTime" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+</resultMap>
+
+
+<!-- 全部字段，一般用于明细查询 -->
+<sql id="AllColumnlist">
+ID,NAME,ID_CARD,JOB_NO,JOB_NAME,JOB_LEVEL,PUB_TIME,
+IS_DELETED,CREATE_TIME,UPDATE_TIME
+</sql>
+
+<!-- 常见字段，一般用于列表查询，可能不包含备注之类的字段 -->
+<sql id="CommonColumnlist">
+ID,NAME,ID_CARD,JOB_NO,JOB_NAME,JOB_LEVEL,PUB_TIME,
+IS_DELETED,CREATE_TIME,UPDATE_TIME
+</sql>
+
+<insert id="add" parameterType="JobInfo" useGeneratedKeys="true" keyProperty="id">
+	insert into T_JOB_INFO(
+		<if test="id!=null">
+		ID,
+		</if>
+		NAME,ID_CARD,JOB_NO,JOB_NAME,JOB_LEVEL,PUB_TIME,
+		IS_DELETED,CREATE_TIME,UPDATE_TIME
+	) values (
+		<if test="id!=null">
+		#{id,jdbcType = VARCHAR},
+		</if>
+		#{name,jdbcType = VARCHAR},
+		#{idCard,jdbcType = VARCHAR},
+		#{jobNo,jdbcType = VARCHAR},
+		#{jobName,jdbcType = VARCHAR},
+		#{jobLevel,jdbcType = VARCHAR},
+		#{pubTime,jdbcType = VARCHAR},
+		#{isDeleted,jdbcType = TINYINT},
+		#{createTime,jdbcType = TIMESTAMP},
+		#{updateTime,jdbcType = TIMESTAMP}
+	)
+</insert>
+
+<update id="update" parameterType="JobInfo">
+	update T_JOB_INFO 
+	<set>
+		<if test="name!=null and name!=''">
+			NAME=#{name,jdbcType = VARCHAR},
+		</if>
+		<if test="idCard!=null and idCard!=''">
+			ID_CARD=#{idCard,jdbcType = VARCHAR},
+		</if>
+		<if test="jobNo!=null and jobNo!=''">
+			JOB_NO=#{jobNo,jdbcType = VARCHAR},
+		</if>
+		<if test="jobName!=null and jobName!=''">
+			JOB_NAME=#{jobName,jdbcType = VARCHAR},
+		</if>
+		<if test="jobLevel!=null and jobLevel!=''">
+			JOB_LEVEL=#{jobLevel,jdbcType = VARCHAR},
+		</if>
+		<if test="pubTime!=null and pubTime!=''">
+			PUB_TIME=#{pubTime,jdbcType = VARCHAR},
+		</if>
+		<if test="isDeleted!=null ">
+			IS_DELETED=#{isDeleted,jdbcType = TINYINT},
+		</if>
+		<if test="createTime!=null ">
+			CREATE_TIME=#{createTime,jdbcType = TIMESTAMP},
+		</if>
+		<if test="updateTime!=null ">
+			UPDATE_TIME=#{updateTime,jdbcType = TIMESTAMP},
+		</if>
+	</set>
+	<where>
+		AND ID=#{id}
+	</where>
+</update>
+
+<delete id="delete">
+	delete from T_JOB_INFO 
+	<where>
+		ID=#{0}
+	</where>
+</delete>
+
+<select id="get" resultMap="JobInfo">
+	select <include refid="AllColumnlist"/> from T_JOB_INFO
+	<where>
+		ID=#{0}
+	</where>
+</select>
+
+<select id="getByIds" resultMap="JobInfo">
+	select <include refid="AllColumnlist"/> from T_JOB_INFO
+	<where>
+		ID in <foreach item="item" index="index" collection="array" open="(" separator="," close=")">#{item}</foreach>
+	</where>
+</select>
+
+<select id="count" parameterType="Query" resultType="Long">
+	select count(ID) from T_JOB_INFO 
+	<where>
+	<include refid="listCommonWhere"/>
+	</where>
+</select>
+
+<select id="queryAll" parameterType="Query" resultMap="JobInfo">
+	select <include refid="CommonColumnlist"/> from T_JOB_INFO 
+	<where>
+	<include refid="listCommonWhere"/>
+	</where>
+</select>
+
+<select id="pageList" parameterType="Query" resultMap="JobInfo">
+	select <include refid="CommonColumnlist"/> from T_JOB_INFO
+	<where>
+	 <include refid="listCommonWhere"/>
+	</where>
+	<![CDATA[LIMIT #{rowIndex},#{pageSize} ]]>
+</select>
+
+
+<sql id="listCommonWhere">
+    <if test="q==null"><!-- 无传入参数时默认查未删除的 -->
+       AND IS_DELETED=0
+    </if>
+	<if test="q!=null">
+		<if test="q.id!=null and q.id!=''">
+			AND ID=#{q.id}
+		</if>
+		<if test="q.name!=null and q.name!=''">
+			AND NAME LIKE '%${q.name}%'
+		</if>
+		<if test="q.idCard!=null and q.idCard!=''">
+			AND ID_CARD LIKE '%${q.idCard}%'
+		</if>
+		<if test="q.jobNo!=null and q.jobNo!=''">
+			AND JOB_NO LIKE '%${q.jobNo}%'
+		</if>
+		<if test="q.jobName!=null and q.jobName!=''">
+			AND JOB_NAME LIKE '%${q.jobName}%'
+		</if>
+		<if test="q.jobLevel!=null and q.jobLevel!=''">
+			AND JOB_LEVEL LIKE '%${q.jobLevel}%'
+		</if>
+		<if test="q.pubTime!=null and q.pubTime!=''">
+			AND PUB_TIME LIKE '%${q.pubTime}%'
+		</if>
+		<if test="q.isDeleted!=null ">
+			AND IS_DELETED=#{q.isDeleted}
+		</if>
+		<if test="q.createTime!=null ">
+			AND CREATE_TIME=#{q.createTime}
+		</if>
+		<if test="q.createTimeStart!=null">
+		<![CDATA[	AND CREATE_TIME>=#{q.createTimeStart}  ]]>
+		</if>
+		<if test="q.createTimeEnd!=null">
+		<![CDATA[	AND CREATE_TIME<#{q.createTimeEnd}   ]]>
+		</if>
+		<if test="q.updateTime!=null ">
+			AND UPDATE_TIME=#{q.updateTime}
+		</if>
+		<if test="q.updateTimeStart!=null">
+		<![CDATA[	AND UPDATE_TIME>=#{q.updateTimeStart}  ]]>
+		</if>
+		<if test="q.updateTimeEnd!=null">
+		<![CDATA[	AND UPDATE_TIME<#{q.updateTimeEnd}   ]]>
+		</if>
+	</if>
+</sql>
+
+</mapper>
